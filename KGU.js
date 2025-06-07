@@ -53,6 +53,21 @@ class KAYGAMEZUtils {
                             defaultValue: 10
                 }        
                     }
+                },
+                {
+                    opcode: 'powerof',
+                    blockType: Scratch.BlockType.REPORTER,
+                    text: '[VALUE] to the power of [EXPONENT]',
+                    arguments:{
+                        VALUE:{
+                            type: Scratch.ArgumentType.NUMBER,
+                            defaultValue: 5
+                        },
+                        EXPONENT:{
+                            type: Scratch.ArgumentType.NUMBER,
+                            defaultValue: 2
+                        }
+                    }
                 }
             ]
         };
@@ -61,7 +76,10 @@ class KAYGAMEZUtils {
         return args.PERCENT / 100 * args.NUMBER;
     }
     moveusingdelta(args){
-        return args.STEPS * 20 * deltaTime
+        return args.STEPS * 20 * deltaTime;
+    }
+    powerof(args){
+        return args.VALUE ** args.EXPONENT;
     }
 }
 Scratch.extensions.register(new KAYGAMEZUtils());
