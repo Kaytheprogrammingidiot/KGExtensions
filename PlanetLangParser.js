@@ -239,12 +239,26 @@ class PlanetLangParser {
             if (currentBlock === 'spawn') {
                 if (line.startsWith('x:')) {
                     const rawX = line.match(/x:\s*(-?\d+(\.\d+)?)/);
-                    this.objects[currentId].position.x = rawX ? Number(rawX[1]) : 0;
+                    this.planet.spawn.x = rawX ? Number(rawX[1]) : 0;
                 }
                 if (line.startsWith('y:')) {
-                const rawY = line.match(/y:\s*(-?\d+(\.\d+)?)/);
-                this.objects[currentId].position.y = rawY ? Number(rawY[1]) : 0;
+                    const rawY = line.match(/y:\s*(-?\d+(\.\d+)?)/);
+                    this.planet.spawn.y = rawY ? Number(rawY[1]) : 0;
                 }
+            }
+
+            if (currentBlock === 'position' && this.objects[currentId]) {
+                if (line.includes('x:')) {
+                    const match = line.match(/x:\s*(-?\d+(\.\d+)?)/);
+                    const value = match ? Number(match[1]) : null;
+                    if (value !== null) this.objects[currentId].position.x = value;
+                }
+                if (line.includes('y:')) {
+                    const match = line.match(/y:\s*(-?\d+(\.\d+)?)/);
+                    const value = match ? Number(match[1]) : null;
+                    if (value !== null) this.objects[currentId].position.y = value;
+                }
+                this._applyPositionToBoundSprite(currentId);
             }
 
             if (currentBlock === 'texture') {
@@ -256,21 +270,6 @@ class PlanetLangParser {
                 if (currentType === 'Background' && this.backgrounds[currentId]) {
                     this.backgrounds[currentId].texture = url;
                     this._applyTextureToBoundSprite(currentId);
-                }
-            }
-
-            if (currentBlock === 'position') {
-                if (line.includes('x:')) {
-                    const match = line.match(/x:\s*(-?\d+(\.\d+)?)/);
-                    const value = match ? Number(match[1]) : null;
-                    console.log('Parsed x for', currentId, '=', value);
-                    if (value !== null) this.objects[currentId].position.x = value;
-                }
-                if (line.includes('y:')) {
-                    const match = line.match(/y:\s*(-?\d+(\.\d+)?)/);
-                    const value = match ? Number(match[1]) : null;
-                    console.log('Parsed y for', currentId, '=', value);
-                    if (value !== null) this.objects[currentId].position.y = value;
                 }
             }
 
@@ -300,57 +299,56 @@ class PlanetLangParser {
         return match ? match[1] : null;
     }
 
-async _applyTextureToBoundSprite(objectId, targetOverride = null) {
-    const object = this.objects[objectId] || this.backgrounds[objectId];
-    if (!object || !object.texture) return;
+    async _applyTextureToBoundSprite(objectId, targetOverride = null) {
+        const object = this.objects[objectId] || this.backgrounds[objectId];
+        if (!object || !object.texture) return;
 
-    const spriteName = Object.keys(this.bindings).find(
-        s => this.bindings[s] === objectId
-    );
-    if (!spriteName) return;
-
-    const runtime = Scratch.vm.runtime;
-    const target = targetOverride ||
-        runtime.targets.find(t => t.sprite && t.sprite.name === spriteName);
-    if (!target) return;
-
-    try {
-        const response = await fetch(object.texture);
-        const assetData = await response.arrayBuffer();
-        const assetType = object.texture.endsWith('.svg')
-            ? runtime.storage.AssetType.ImageVector
-            : runtime.storage.AssetType.ImageBitmap;
-
-        const asset = runtime.storage.createAsset(
-            assetType,
-            null,
-            true,
-            new Uint8Array(assetData),
-            object.texture
+        const spriteName = Object.keys(this.bindings).find(
+            s => this.bindings[s] === objectId
         );
+        if (!spriteName) return;
 
-        const costume = {
-            name: `${objectId}-texture`,
-            asset: asset,
-            md5ext: asset.md5ext,
-            dataFormat: asset.dataFormat,
-            rotationCenterX: asset.rotationCenterX || 0,
-            rotationCenterY: asset.rotationCenterY || 0
-        };
+        const runtime = Scratch.vm.runtime;
+        const target = targetOverride ||
+            runtime.targets.find(t => t.sprite && t.sprite.name === spriteName);
+        if (!target) return;
 
-        const existingIndex = target.sprite.costumes.findIndex(c => c.name === costume.name);
-        if (existingIndex !== -1) {
-            target.sprite.costumes[existingIndex] = costume;
-            target.setCostume(existingIndex);
-        } else {
-            target.sprite.costumes.push(costume);
-            target.setCostume(target.sprite.costumes.length - 1);
+        try {
+            const response = await fetch(object.texture);
+            const assetData = await response.arrayBuffer();
+            const assetType = object.texture.endsWith('.svg')
+                ? runtime.storage.AssetType.ImageVector
+                : runtime.storage.AssetType.ImageBitmap;
+
+            const asset = runtime.storage.createAsset(
+                assetType,
+                null,
+                true,
+                new Uint8Array(assetData),
+                object.texture
+            );
+
+            const costume = {
+                name: `${objectId}-texture`,
+                asset: asset,
+                md5ext: asset.md5ext,
+                dataFormat: asset.dataFormat,
+                rotationCenterX: asset.rotationCenterX || 0,
+                rotationCenterY: asset.rotationCenterY || 0
+            };
+
+            const existingIndex = target.sprite.costumes.findIndex(c => c.name === costume.name);
+            if (existingIndex !== -1) {
+                target.sprite.costumes[existingIndex] = costume;
+                target.setCostume(existingIndex);
+            } else {
+                target.sprite.costumes.push(costume);
+                target.setCostume(target.sprite.costumes.length - 1);
+            }
+        } catch (e) {
+            console.error('Failed to apply texture:', e);
         }
-        console.log('Parsed texture for', objectId, ':', object.texture);
-    } catch (e) {
-        console.error('Failed to apply texture:', e);
     }
-}
 
     _applyPositionToBoundSprite(objectId) {
         const object = this.objects[objectId];
@@ -378,10 +376,10 @@ async _applyTextureToBoundSprite(objectId, targetOverride = null) {
     }
 
     bindSprite(args) {
-        console.log('Bindings:', this.bindings);
         this.bindings[args.SPRITE] = args.ID;
         this.clicks[args.ID] = false;
         this._applyTextureToBoundSprite(args.ID);
+        this._applyPositionToBoundSprite(args.ID);
     }
 
     bindBackgroundSprite(args) {
@@ -435,15 +433,16 @@ async _applyTextureToBoundSprite(objectId, targetOverride = null) {
             const contentType = response.headers.get('content-type');
 
             if (contentType.includes('svg')) {
-                return await response.text(); // Return raw SVG
+                return await response.text();
             } else {
-                return '[non-SVG texture]'; // Optional fallback
+                return '[non-SVG texture]';
             }
         } catch (e) {
             console.error('Failed to fetch texture:', e);
             return '';
         }
     }
+
     getObjectX(args) {
         const obj = this.objects[args.ID];
         return obj && obj.position ? obj.position.x : 0;
@@ -453,13 +452,13 @@ async _applyTextureToBoundSprite(objectId, targetOverride = null) {
         const obj = this.objects[args.ID];
         return obj && obj.position ? obj.position.y : 0;
     }
+
     getObjectProperties(args) {
         const obj = this.objects[args.ID];
         if (!obj || typeof obj.gravity === 'undefined') return '{}';
 
         const props = {
             gravity: obj.gravity
-            // Add more keys here if you expand the properties block later
         };
 
         return JSON.stringify(props);
@@ -467,7 +466,3 @@ async _applyTextureToBoundSprite(objectId, targetOverride = null) {
 }
 
 Scratch.extensions.register(new PlanetLangParser());
-
-
-
-
