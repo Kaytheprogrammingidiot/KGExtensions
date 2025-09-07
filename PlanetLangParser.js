@@ -232,10 +232,12 @@ class PlanetLangParser {
 
             if (currentBlock === 'spawn') {
                 if (line.startsWith('x:')) {
-                    this.planet.spawn.x = Number(line.split('x:')[1].trim());
+                    const rawX = line.split('x:')[1].replace(',', '').trim();
+                    this.planet.spawn.x = isNaN(Number(rawX)) ? 0 : Number(rawX);
                 }
                 if (line.startsWith('y:')) {
-                    this.planet.spawn.y = Number(line.split('y:')[1].trim());
+                const rawY = line.split('y:')[1].replace(',', '').trim();
+                this.planet.spawn.x = isNaN(Number(rawY)) ? 0 : Number(rawY);
                 }
             }
 
