@@ -21,9 +21,9 @@ class PlanetLangParser {
             name: 'PlanetLang Parser',
             blocks: [
                 {
-                    opcode: 'getObjectProperties',
+                    opcode: 'getTextureData',
                     blockType: Scratch.BlockType.REPORTER,
-                    text: 'get properties of [ID]',
+                    text: 'get texture of [ID]',
                     arguments: {
                         ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'objecttest' }
                     }
@@ -232,10 +232,10 @@ class PlanetLangParser {
 
             if (currentBlock === 'spawn') {
                 if (line.startsWith('x:')) {
-                    this.planet.spawn.x = parseInt(line.split('x:')[1]);
+                    this.planet.spawn.x = Number(line.split('x:')[1].trim());
                 }
                 if (line.startsWith('y:')) {
-                    this.planet.spawn.y = parseInt(line.split('y:')[1]);
+                    this.planet.spawn.y = Number(line.split('y:')[1].trim());
                 }
             }
 
@@ -253,10 +253,12 @@ class PlanetLangParser {
 
             if (currentBlock === 'position') {
                 if (line.startsWith('x:')) {
-                    this.objects[currentId].position.x = parseInt(line.split('x:')[1]);
+                    const rawX = line.split('x:')[1].replace(',', '').trim();
+                    this.objects[currentId].position.x = isNaN(Number(rawX)) ? 0 : Number(rawX);
                 }
                 if (line.startsWith('y:')) {
-                    this.objects[currentId].position.y = parseInt(line.split('y:')[1]);
+                    const rawY = line.split('y:')[1].replace(',', '').trim();
+                    this.objects[currentId].position.y = isNaN(Number(rawY)) ? 0 : Number(rawY);
                 }
                 this._applyPositionToBoundSprite(currentId);
             }
@@ -454,4 +456,3 @@ async _applyTextureToBoundSprite(objectId, targetOverride = null) {
 }
 
 Scratch.extensions.register(new PlanetLangParser());
-
