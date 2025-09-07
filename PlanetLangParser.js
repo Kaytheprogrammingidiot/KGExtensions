@@ -232,24 +232,22 @@ class PlanetLangParser {
                 continue;
             }
 
-            // --- planet.thumbnail
             if (currentBlock === 'thumbnail' && line.startsWith('url:')) {
                 this.planet.thumbnail = line.split('url:')[1].trim().replace(';', '');
             }
 
-            // --- planet.spawn
             if (currentBlock === 'spawn') {
+                const cleaned = line.replace(/[,;]/g, '');
                 if (line.startsWith('x:')) {
-                    const rawX = line.match(/x:\s*(-?\d+(\.\d+)?)/);
+                    const rawX = cleaned.match(/x:\s*(-?\d+(\.\d+)?)/);
                     this.planet.spawn.x = rawX ? Number(rawX[1]) : 0;
                 }
                 if (line.startsWith('y:')) {
-                    const rawY = line.match(/y:\s*(-?\d+(\.\d+)?)/);
+                    const rawY = cleaned.match(/y:\s*(-?\d+(\.\d+)?)/);
                     this.planet.spawn.y = rawY ? Number(rawY[1]) : 0;
                 }
             }
 
-            // --- setTextureOf
             if (currentBlock === 'texture') {
                 const url = line.split('url:')[1].trim().replace(';', '');
                 if (currentType === 'Object' && this.objects[currentId]) {
@@ -262,23 +260,22 @@ class PlanetLangParser {
                 }
             }
 
-            // --- setPositionOf
             if (currentBlock === 'position') {
+                const cleaned = line.replace(/[,;]/g, '');
                 if (line.includes('x:')) {
-                    const match = line.match(/x:\s*(-?\d+(\.\d+)?)/);
+                    const match = cleaned.match(/x:\s*(-?\d+(\.\d+)?)/);
                     if (this.objects[currentId]) {
                         this.objects[currentId].position.x = match ? Number(match[1]) : 0;
                     }
                 }
                 if (line.includes('y:')) {
-                    const match = line.match(/y:\s*(-?\d+(\.\d+)?)/);
+                    const match = cleaned.match(/y:\s*(-?\d+(\.\d+)?)/);
                     if (this.objects[currentId]) {
                         this.objects[currentId].position.y = match ? Number(match[1]) : 0;
                     }
                 }
             }
 
-            // --- setSizeOf
             if (currentBlock === 'size') {
                 const size = line.replace(';', '').trim();
                 if (this.objects[currentId]) {
@@ -286,7 +283,6 @@ class PlanetLangParser {
                 }
             }
 
-            // --- propertiesOf
             if (currentBlock === 'properties') {
                 if (line.startsWith('gravity:')) {
                     const gravity = parseFloat(line.split('gravity:')[1]);
@@ -358,7 +354,33 @@ class PlanetLangParser {
         }
     }
 
+    _applyPositionToBoundSprite(objectId) {
+        const object = this.objects[objectId];
+        if (!object) return;
+
+        const spriteName = Object.keys(this.bindings).find(
+            s => this.bindings[s] === objectId
+        );
+        if (!spriteName) return;
+
+        const runtime = Scratch.vm.runtime;
+        const targets = runtime.targets.filter(
+            t => t.sprite && t.sprite.name === spriteName
+        );
+
+        for (const target of targets) {
+            if (typeof target.setXY === 'function') {
+                target.setXY(object.position.x, object.position.y);
+            } else {
+                target.x = object.position.x;
+                target.y = object.position.y;
+                target.updateAllDrawableProperties();
+            }
+        }
+    }
+
     bindSprite(args) {
+        console.log('Bindings:', this.bindings);
         this.bindings[args.SPRITE] = args.ID;
         this.clicks[args.ID] = false;
         this._applyTextureToBoundSprite(args.ID);
