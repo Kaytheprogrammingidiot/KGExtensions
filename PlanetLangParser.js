@@ -233,12 +233,12 @@ class PlanetLangParser {
 
             if (currentBlock === 'spawn') {
                 if (line.startsWith('x:')) {
-                    const rawX = line.split('x:')[1].replace(',', '').trim();
-                    this.planet.spawn.x = isNaN(Number(rawX)) ? 0 : Number(rawX);
+                    const rawX = line.match(/x:\s*(-?\d+(\.\d+)?)/);
+                    this.objects[currentId].position.x = rawX ? Number(rawX[1]) : 0;
                 }
                 if (line.startsWith('y:')) {
-                const rawY = line.split('y:')[1].replace(',', '').trim();
-                this.planet.spawn.x = isNaN(Number(rawY)) ? 0 : Number(rawY);
+                const rawY = line.match(/y:\s*(-?\d+(\.\d+)?)/);
+                this.objects[currentId].position.y = rawY ? Number(rawY[1]) : 0;
                 }
             }
 
@@ -459,4 +459,5 @@ async _applyTextureToBoundSprite(objectId, targetOverride = null) {
 }
 
 Scratch.extensions.register(new PlanetLangParser());
+
 
