@@ -255,15 +255,18 @@ class PlanetLangParser {
             }
 
             if (currentBlock === 'position') {
-                if (line.startsWith('x:')) {
-                    const rawX = line.split('x:')[1].replace(',', '').trim();
-                    this.objects[currentId].position.x = isNaN(Number(rawX)) ? 0 : Number(rawX);
+                if (line.includes('x:')) {
+                    const match = line.match(/x:\s*(-?\d+(\.\d+)?)/);
+                    const value = match ? Number(match[1]) : null;
+                    console.log('Parsed x for', currentId, '=', value);
+                    if (value !== null) this.objects[currentId].position.x = value;
                 }
-                if (line.startsWith('y:')) {
-                    const rawY = line.split('y:')[1].replace(',', '').trim();
-                    this.objects[currentId].position.y = isNaN(Number(rawY)) ? 0 : Number(rawY);
+                if (line.includes('y:')) {
+                    const match = line.match(/y:\s*(-?\d+(\.\d+)?)/);
+                    const value = match ? Number(match[1]) : null;
+                    console.log('Parsed y for', currentId, '=', value);
+                    if (value !== null) this.objects[currentId].position.y = value;
                 }
-                this._applyPositionToBoundSprite(currentId);
             }
 
             if (currentBlock === 'size') {
@@ -459,5 +462,6 @@ async _applyTextureToBoundSprite(objectId, targetOverride = null) {
 }
 
 Scratch.extensions.register(new PlanetLangParser());
+
 
 
