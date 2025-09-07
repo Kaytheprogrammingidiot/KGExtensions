@@ -19,6 +19,7 @@ class PlanetLangParser {
         return {
             id: 'planetlangparser',
             name: 'PlanetLang Parser',
+            color1: "#6b8de3",
             blocks: [
                 {
                     opcode: 'getTextureData',
@@ -458,3 +459,4 @@ async _applyTextureToBoundSprite(objectId, targetOverride = null) {
 }
 
 Scratch.extensions.register(new PlanetLangParser());
+
