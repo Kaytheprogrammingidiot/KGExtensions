@@ -161,16 +161,21 @@ class PlanetLangParser {
             }
 
             if (line.startsWith('new Object:')) {
-                currentId = line.split(':')[1].replace(';', '');
-                this.objects[currentId] = {
-                    position: { x: 0, y: 0 },
-                    texture: '',
-                    size: '',
-                    gravity: null,
-                    onclick: false
-                };
-                currentType = 'Object';
-                continue;
+                const idMatch = line.match(/new Object:\s*([^\s;]+)/);
+                if (idMatch) {
+                    currentId = idMatch[1];
+                    if (!this.objects[currentId]) {
+                        this.objects[currentId] = {
+                            position: { x: 0, y: 0 },
+                            texture: '',
+                            size: '',
+                            gravity: null,
+                            onclick: false
+                        };
+                    }
+                    currentType = 'Object';
+                    continue;
+                }
             }
 
             if (line.startsWith('switchBackgroundImgTo')) {
@@ -462,6 +467,7 @@ async _applyTextureToBoundSprite(objectId, targetOverride = null) {
 }
 
 Scratch.extensions.register(new PlanetLangParser());
+
 
 
 
