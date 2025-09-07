@@ -238,27 +238,11 @@ class PlanetLangParser {
 
             if (currentBlock === 'spawn') {
                 if (line.startsWith('x:')) {
-                    const rawX = line.match(/x:\s*(-?\d+(\.\d+)?)/);
-                    this.planet.spawn.x = rawX ? Number(rawX[1]) : 0;
+                    this.planet.spawn.x = parseInt(line.split('x:')[1]);
                 }
                 if (line.startsWith('y:')) {
-                    const rawY = line.match(/y:\s*(-?\d+(\.\d+)?)/);
-                    this.planet.spawn.y = rawY ? Number(rawY[1]) : 0;
+                    this.planet.spawn.y = parseInt(line.split('y:')[1]);
                 }
-            }
-
-            if (currentBlock === 'position' && this.objects[currentId]) {
-                if (line.includes('x:')) {
-                    const match = line.match(/x:\s*(-?\d+(\.\d+)?)/);
-                    const value = match ? Number(match[1]) : null;
-                    if (value !== null) this.objects[currentId].position.x = value;
-                }
-                if (line.includes('y:')) {
-                    const match = line.match(/y:\s*(-?\d+(\.\d+)?)/);
-                    const value = match ? Number(match[1]) : null;
-                    if (value !== null) this.objects[currentId].position.y = value;
-                }
-                this._applyPositionToBoundSprite(currentId);
             }
 
             if (currentBlock === 'texture') {
@@ -271,6 +255,20 @@ class PlanetLangParser {
                     this.backgrounds[currentId].texture = url;
                     this._applyTextureToBoundSprite(currentId);
                 }
+            }
+
+            if (currentBlock === 'position') {
+                if (line.includes('x:')) {
+                    const match = line.match(/x:\s*(-?\d+(\.\d+)?)/);
+                    const value = match ? Number(match[1]) : null;
+                    if (value !== null) this.objects[currentId].position.x = value;
+                }
+                if (line.includes('y:')) {
+                    const match = line.match(/y:\s*(-?\d+(\.\d+)?)/);
+                    const value = match ? Number(match[1]) : null;
+                    if (value !== null) this.objects[currentId].position.y = value;
+                }
+                this._applyPositionToBoundSprite(currentId);
             }
 
             if (currentBlock === 'size') {
@@ -444,12 +442,30 @@ class PlanetLangParser {
     }
 
     getObjectX(args) {
-        const obj = this.objects[args.ID];
+        const id = args.ID;
+        const obj = this.objects[id];
+
+        const spriteName = Object.keys(this.bindings).find(s => this.bindings[s] === id);
+        if (spriteName) {
+            const runtime = Scratch.vm.runtime;
+            const target = runtime.targets.find(t => t.sprite && t.sprite.name === spriteName);
+            if (target) return target.x;
+        }
+
         return obj && obj.position ? obj.position.x : 0;
     }
 
     getObjectY(args) {
-        const obj = this.objects[args.ID];
+        const id = args.ID;
+        const obj = this.objects[id];
+
+        const spriteName = Object.keys(this.bindings).find(s => this.bindings[s] === id);
+        if (spriteName) {
+            const runtime = Scratch.vm.runtime;
+            const target = runtime.targets.find(t => t.sprite && t.sprite.name === spriteName);
+            if (target) return target.y;
+        }
+
         return obj && obj.position ? obj.position.y : 0;
     }
 
