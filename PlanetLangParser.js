@@ -21,9 +21,9 @@ class PlanetLangParser {
             name: 'PlanetLang Parser',
             blocks: [
                 {
-                    opcode: 'getTextureData',
+                    opcode: 'getObjectProperties',
                     blockType: Scratch.BlockType.REPORTER,
-                    text: 'get texture of [ID]',
+                    text: 'get properties of [ID]',
                     arguments: {
                         ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'objecttest' }
                     }
@@ -454,3 +454,4 @@ async _applyTextureToBoundSprite(objectId, targetOverride = null) {
 }
 
 Scratch.extensions.register(new PlanetLangParser());
+
